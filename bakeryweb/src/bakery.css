@@ -1957,6 +1957,76 @@ button {
     gap: 16px;
   }
 }
+/* 配送與付款資訊：留白與細線分隔 */
+.order-delivery-info {
+  margin: 28px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.order-delivery-info h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #554941;
+}
+
+.order-delivery-info .order-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  background: transparent;
+  border-top: 1px solid #ddd5cd;
+}
+
+.order-delivery-info .order-summary > div {
+  min-width: 0;
+  padding: 18px 20px;
+  background: transparent;
+  border-bottom: 1px solid #ddd5cd;
+}
+
+/* 左欄右側的細線 */
+.order-delivery-info .order-summary > div:nth-child(odd) {
+  border-right: 1px solid #ddd5cd;
+}
+
+.order-delivery-info .order-summary span {
+  margin-bottom: 8px;
+  color: #9b8a7e;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.order-delivery-info .order-summary strong {
+  color: #554941;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.order-delivery-info p {
+  margin: 16px 0 0;
+  line-height: 1.8;
+}
+
+/* 手機改成單欄 */
+@media (max-width: 650px) {
+  .order-delivery-info .order-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .order-delivery-info .order-summary > div {
+    padding: 16px 12px;
+    border-right: 0;
+  }
+
+  .order-delivery-info .order-summary > div:nth-child(odd) {
+    border-right: 0;
+  }
+}
 
 /* =========================
    評論區共用設定
