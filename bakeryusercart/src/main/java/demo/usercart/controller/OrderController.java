@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import demo.usercart.dto.CheckoutRequest;
 import demo.usercart.model.JwtUtility;
 import demo.usercart.model.Order;
 import demo.usercart.service.OrderService;
@@ -13,117 +14,65 @@ import demo.usercart.service.OrderService;
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+	@Autowired
+	private OrderService orderService;
 
-    @Autowired
-    private JwtUtility jwtUtility;
+	@Autowired
+	private JwtUtility jwtUtility;
 
-    // 建立訂單
-    @PostMapping
-    public ResponseEntity<?> createOrder(
-            @RequestBody Order order,
-            @RequestHeader(
-                    value = "Authorization",
-                    required = false
-            ) String authorization
-    ) {
+	// 建立訂單
+	// 結帳並建立訂單
+	@PostMapping
+	public ResponseEntity<Order> createOrder(@RequestBody CheckoutRequest request,
 
-        // 先驗證 Header、JWT 簽章與到期時間
-        jwtUtility.extractUsernameFromAuthorization(
-                authorization
-        );
+			@RequestHeader(value = "Authorization", required = false) String authorization) {
+		String username = jwtUtility.extractUsernameFromAuthorization(authorization);
 
-        // 暫時沿用既有 Service 的參數格式
-        String token = authorization.trim()
-                .split("\\s+", 2)[1];
+		Order order = orderService.checkout(username, request);
 
-        Order result = orderService.createOrder(
-                order,
-                "Bearer " + token
-        );
+		return ResponseEntity.status(HttpStatus.CREATED).body(order);
+	}
 
-        if (result == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .build();
-        }
+	// 查詢指定會員的訂單
+	@GetMapping("/{username}")
+	public ResponseEntity<?> getOrdersByUsername(@PathVariable String username,
+			@RequestHeader(value = "Authorization", required = false) String authorization) {
 
-        return ResponseEntity.ok(result);
-    }
+		String loginUsername = jwtUtility.extractUsernameFromAuthorization(authorization);
 
-    // 查詢指定會員的訂單
-    @GetMapping("/{username}")
-    public ResponseEntity<?> getOrdersByUsername(
-            @PathVariable String username,
-            @RequestHeader(
-                    value = "Authorization",
-                    required = false
-            ) String authorization
-    ) {
+		// 不可透過修改網址查詢其他會員
+		if (!loginUsername.equals(username)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
 
-        String loginUsername =
-                jwtUtility.extractUsernameFromAuthorization(
-                        authorization
-                );
+		return ResponseEntity.ok(orderService.getOrdersByUsername(loginUsername));
+	}
 
-        // 不可透過修改網址查詢其他會員
-        if (!loginUsername.equals(username)) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .build();
-        }
+	// 查詢單筆訂單
+	@GetMapping("/orderid/{orderid}")
+	public ResponseEntity<?> getOrdersById(@PathVariable Integer orderid,
+			@RequestHeader(value = "Authorization", required = false) String authorization) {
 
-        return ResponseEntity.ok(
-                orderService.getOrdersByUsername(loginUsername)
-        );
-    }
+		String loginUsername = jwtUtility.extractUsernameFromAuthorization(authorization);
 
-    // 查詢單筆訂單
-    @GetMapping("/orderid/{orderid}")
-    public ResponseEntity<?> getOrdersById(
-            @PathVariable Integer orderid,
-            @RequestHeader(
-                    value = "Authorization",
-                    required = false
-            ) String authorization
-    ) {
+		Order order = orderService.getOrdersById(orderid);
 
-        String loginUsername =
-                jwtUtility.extractUsernameFromAuthorization(
-                        authorization
-                );
+		// 訂單不存在，或不屬於目前會員，統一回傳 404
+		if (order == null || order.getUser() == null || !loginUsername.equals(order.getUser().getUsername())) {
 
-        Order order = orderService.getOrdersById(orderid);
+			return ResponseEntity.notFound().build();
+		}
 
-        // 訂單不存在，或不屬於目前會員，統一回傳 404
-        if (order == null
-                || order.getUser() == null
-                || !loginUsername.equals(
-                        order.getUser().getUsername()
-                )) {
+		return ResponseEntity.ok(order);
+	}
 
-            return ResponseEntity.notFound().build();
-        }
+	// 目前沒有管理員權限機制，不開放查詢全部會員訂單
+	@GetMapping
+	public ResponseEntity<?> getAllOrders(
+			@RequestHeader(value = "Authorization", required = false) String authorization) {
 
-        return ResponseEntity.ok(order);
-    }
+		jwtUtility.extractUsernameFromAuthorization(authorization);
 
-    // 目前沒有管理員權限機制，不開放查詢全部會員訂單
-    @GetMapping
-    public ResponseEntity<?> getAllOrders(
-            @RequestHeader(
-                    value = "Authorization",
-                    required = false
-            ) String authorization
-    ) {
-
-        jwtUtility.extractUsernameFromAuthorization(
-                authorization
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .build();
-    }
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+	}
 }
