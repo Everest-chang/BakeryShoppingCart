@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fontFamilies>
+    <fontFamily name="SimHei">
+
+        <normal><![CDATA[fonts/SimHei.ttf]]></normal>
+        <bold><![CDATA[fonts/SimHei.ttf]]></bold>
+        <italic><![CDATA[fonts/SimHei.ttf]]></italic>
+        <boldItalic><![CDATA[fonts/SimHei.ttf]]></boldItalic>
+
+        <pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+
+    </fontFamily>
+</fontFamilies>

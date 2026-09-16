@@ -1,0 +1,43 @@
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="VocabList" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="1250bffc-97d8-4518-bf58-aa4be9186562">
+	<parameter name="ReportTitle" class="java.lang.String"/>
+	<field name="level" class="java.lang.String"/>
+	<field name="word" class="java.lang.String"/>
+	<field name="kana" class="java.lang.String"/>
+	<field name="meaning" class="java.lang.String"/>
+	<title height="50">
+		<element kind="textField" uuid="6acc3701-b001-43b4-b8ca-dacc126f6f96" x="0" y="10" width="555" height="30" fontName="SimHei" fontSize="18.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[$P{ReportTitle}]]></expression>
+		</element>
+	</title>
+	<columnHeader height="30">
+		<element kind="staticText" uuid="303becfe-1dc7-4421-a333-265a341c06fa" x="0" y="0" width="100" height="30" fontName="SimHei" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[級別]]></text>
+		</element>
+		<element kind="staticText" uuid="a3526891-a423-44ae-b32f-79020d4a7812" x="100" y="0" width="150" height="30" fontName="SimHei" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[單字 (Word)]]></text>
+		</element>
+		<element kind="staticText" uuid="6a37040b-9db5-433d-a003-27b01df7512d" x="250" y="0" width="150" height="30" fontName="SimHei" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[假名 (Kana)]]></text>
+		</element>
+		<element kind="staticText" uuid="7165a05b-1a7c-4c5e-9950-cb7a7d444698" x="400" y="0" width="155" height="30" fontName="SimHei" fontSize="12.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[意思 (Meaning)]]></text>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="30">
+			<element kind="textField" uuid="a6f1cf9b-69c2-46d0-9771-45f6bea8a1a9" x="0" y="0" width="100" height="30" fontName="SimHei" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{level}]]></expression>
+			</element>
+			<element kind="textField" uuid="adcf7898-b2bf-491e-80fc-d926ff25f46d" x="100" y="0" width="150" height="30" fontName="SimHei" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{word}]]></expression>
+			</element>
+			<element kind="textField" uuid="455a5044-e8e5-4c31-a930-10577d0a9e9f" x="250" y="0" width="150" height="30" fontName="SimHei" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{kana}]]></expression>
+			</element>
+			<element kind="textField" uuid="1e631ca5-ed3f-4562-a3be-f0494f049cd7" x="400" y="0" width="155" height="30" fontName="SimHei" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{meaning}]]></expression>
+			</element>
+		</band>
+	</detail>
+</jasperReport>

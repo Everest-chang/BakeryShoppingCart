@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="demo.usercart.mapper.OrderMapper">
+
+	<resultMap id="orderResultMap" type="Order">
+
+		<!-- Order 自己的欄位 -->
+		<id property="id" column="order_id" />
+
+		<result property="orderTime" column="orderTime" />
+
+		<result property="totalPrice" column="totalPrice" />
+
+
+		<!-- 多對一：Order → User -->
+		<association property="user" javaType="User">
+
+			<id property="id" column="user_id" />
+
+			<result property="username" column="username" />
+
+			<result property="name" column="name" />
+
+			<result property="email" column="email" />
+
+		</association>
+
+
+		<!-- 一對多：Order → List<OrderItem> -->
+		<collection property="items" ofType="OrderItem">
+
+			<id property="id" column="item_id" />
+
+			<result property="pid" column="pid" />
+
+			<result property="productTitle" column="productTitle" />
+
+			<result property="productPrice" column="productPrice" />
+
+			<result property="quantity" column="quantity" />
+
+		</collection>
+
+	</resultMap>
+
+	<!-- 訂單基本資料與所屬會員，不載入商品明細 -->
+	<resultMap id="orderWithUserResultMap"
+		type="demo.usercart.model.Order">
+
+		<id property="id" column="order_id" />
+
+		<result property="orderTime" column="order_time" />
+		<result property="totalPrice" column="total_price" />
+
+		<result property="subtotal" column="subtotal" />
+		<result property="shippingFee" column="shipping_fee" />
+
+		<result property="deliveryMethod" column="delivery_method"
+			javaType="demo.usercart.model.DeliveryMethod"
+			typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+
+		<result property="recipientName" column="recipient_name" />
+		<result property="recipientPhone" column="recipient_phone" />
+		<result property="deliveryAddress" column="delivery_address" />
+		<result property="pickupStoreName" column="pickup_store_name" />
+		<result property="pickupStoreCode" column="pickup_store_code" />
+
+		<result property="pickupDate" column="pickup_date"
+			javaType="java.time.LocalDate" />
+
+		<result property="paymentMethod" column="payment_method"
+			javaType="demo.usercart.model.PaymentMethod"
+			typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+
+		<result property="paymentStatus" column="payment_status"
+			javaType="demo.usercart.model.PaymentStatus"
+			typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+
+		<association property="user"
+			javaType="demo.usercart.model.User" notNullColumn="user_id">
+
+			<id property="id" column="user_id" />
+			<result property="username" column="user_username" />
+
+		</association>
+
+	</resultMap>
+
+	<sql id="orderCheckoutColumns">
+		o.id AS order_id,
+		o.orderTime AS order_time,
+		o.totalPrice AS
+		total_price,
+		o.subtotal,
+		o.shipping_fee,
+		o.delivery_method,
+		o.recipient_name,
+		o.recipient_phone,
+		o.delivery_address,
+		o.pickup_store_name,
+		o.pickup_store_code,
+		o.pickup_date,
+		o.payment_method,
+		o.payment_status,
+		u.id AS user_id,
+		u.username AS
+		user_username
+	</sql>
+
+	<select id="findAll" resultType="Order">
+
+		SELECT *
+		FROM orders
+
+	</select>
+
+
+	<select id="findById" resultMap="orderWithUserResultMap">
+
+		SELECT
+		<include refid="orderCheckoutColumns" />
+		FROM orders o
+		JOIN users u ON o.user_id = u.id
+		WHERE o.id = #{id}
+
+	</select>
+
+
+	<select id="findByUserUsername"
+		resultMap="orderWithUserResultMap">
+
+		SELECT
+		<include refid="orderCheckoutColumns" />
+		FROM orders o
+		JOIN users u ON o.user_id = u.id
+		WHERE u.username = #{username}
+		ORDER BY o.orderTime DESC, o.id DESC
+
+	</select>
+
+	<insert id="save" parameterType="Order" useGeneratedKeys="true"
+		keyProperty="id">
+
+		INSERT INTO orders (
+		orderTime,
+		totalPrice,
+		user_id,
+		subtotal,
+		shipping_fee,
+		delivery_method,
+		recipient_name,
+		recipient_phone,
+		delivery_address,
+		pickup_store_name,
+		pickup_store_code,
+		pickup_date,
+		payment_method,
+		payment_status
+		)
+		VALUES (
+		#{orderTime},
+		#{totalPrice},
+		#{user.id},
+		#{subtotal},
+		#{shippingFee},
+		#{deliveryMethod,
+		typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+		#{recipientName},
+		#{recipientPhone},
+		#{deliveryAddress, jdbcType=VARCHAR},
+		#{pickupStoreName, jdbcType=VARCHAR},
+		#{pickupStoreCode,
+		jdbcType=VARCHAR},
+		#{pickupDate, jdbcType=DATE},
+		#{paymentMethod,
+		typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+		#{paymentStatus,
+		typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+		)
+
+	</insert>
+
+	<insert id="saveItem" parameterType="OrderItem">
+
+		INSERT INTO orderitems
+		(
+		pid,
+		productTitle,
+		productPrice,
+		quantity,
+		order_id
+		)
+
+		VALUES
+		(
+		#{pid},
+		#{productTitle},
+		#{productPrice},
+		#{quantity},
+		#{order.id}
+		)
+
+	</insert>
+
+
+</mapper>

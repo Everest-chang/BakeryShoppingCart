@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="demo.usercart.mapper.ProductMapper">
+
+	<!-- 商品基本資料，不包含圖片二進位內容 -->
+	<resultMap id="productSummaryMap"
+		type="demo.usercart.model.Product">
+
+		<id property="id" column="id" />
+
+		<result property="title" column="title" />
+		<result property="description" column="description" />
+		<result property="category" column="category" />
+		<result property="price" column="price" />
+
+		<!-- 暫時保留檔名，維持原本前端圖片顯示 -->
+		<result property="image" column="image" />
+
+		<result property="imageContentType" column="image_content_type" />
+
+	</resultMap>
+
+	<!-- 共用查詢欄位 -->
+	<sql id="productSummaryColumns">
+		id,
+		title,
+		description,
+		category,
+		price,
+		image,
+		image_content_type
+	</sql>
+
+	<!-- 全部商品 -->
+	<select id="findAll" resultMap="productSummaryMap">
+		SELECT
+		<include refid="productSummaryColumns" />
+		FROM products
+	</select>
+
+	<!-- 單筆商品 -->
+	<select id="findById" parameterType="java.lang.Integer"
+		resultMap="productSummaryMap">
+		SELECT
+		<include refid="productSummaryColumns" />
+		FROM products
+		WHERE id = #{id}
+	</select>
+
+	<!-- 依分類查詢 -->
+	<select id="findByCategory" parameterType="java.lang.String"
+		resultMap="productSummaryMap">
+		SELECT
+		<include refid="productSummaryColumns" />
+		FROM products
+		WHERE category = #{category}
+	</select>
+
+	<!-- 圖片專用映射，只載入商品 ID、圖片內容與格式 -->
+	<resultMap id="productImageMap"
+		type="demo.usercart.model.Product">
+
+		<id property="id" column="id" />
+
+		<result property="imageData" column="image_data"
+			jdbcType="BLOB" />
+
+		<result property="imageContentType" column="image_content_type" />
+
+	</resultMap>
+
+	<!-- 讀取單一商品圖片 -->
+	<select id="findImageById" resultMap="productImageMap">
+
+		SELECT
+		id,
+		image_data,
+		image_content_type
+		FROM products
+		WHERE id = #{id}
+
+	</select>
+
+	<!-- 只轉存尚未有圖片內容的商品 -->
+	<update id="saveImageIfAbsent">
+
+		UPDATE products
+		SET
+		image_data = #{imageData, jdbcType=BLOB},
+		image_content_type = #{imageContentType, jdbcType=VARCHAR}
+		WHERE id = #{id}
+		AND image_data IS NULL
+
+	</update>
+
+</mapper>

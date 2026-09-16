@@ -1,0 +1,76 @@
+<!-- Created with Jaspersoft Studio version 7.0.8.final using JasperReports Library version 7.0.8-6f896111  -->
+<jasperReport name="ProductReport" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c48f38b8-465a-4651-819f-3d053b9a33d3">
+	<parameter name="ReportTitle" class="java.lang.String"/>
+	<field name="id" class="java.lang.Integer"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="category" class="java.lang.String"/>
+	<field name="price" class="java.lang.Double"/>
+	<background splitType="Stretch"/>
+	<title height="80" splitType="Stretch">
+		<element kind="rectangle" uuid="933e6132-0aa3-4c4a-a39b-e33746d24253" x="0" y="5" width="555" height="58" backcolor="#F2E6D8" mode="Opaque">
+			<pen lineWidth="0.0"/>
+		</element>
+		<element kind="textField" uuid="8bc7c157-acd1-4457-a94b-5a97bada7ada" x="0" y="12" width="555" height="38" forecolor="#5A3E2B" fontName="SimHei" fontSize="22.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<expression><![CDATA[
+                $P{ReportTitle} == null
+                ? "潘媽媽烘焙坊 商品清單"
+                : $P{ReportTitle}
+            ]]></expression>
+		</element>
+		<element kind="staticText" uuid="f8db5bba-d27a-42ed-9d4c-26e2f1335db2" x="0" y="50" width="555" height="18" forecolor="#7A6A5E" fontName="SimHei" fontSize="9.0" hTextAlign="Center">
+			<text><![CDATA[Product Report]]></text>
+		</element>
+	</title>
+	<pageHeader height="15" splitType="Stretch"/>
+	<columnHeader height="42" splitType="Stretch">
+		<element kind="rectangle" uuid="83d4b2dd-22f2-4db1-8eef-326cdca0d084" x="0" y="0" width="555" height="36" backcolor="#6F4E37" mode="Opaque"/>
+		<element kind="staticText" uuid="23bdf6a0-c23c-4ada-b5cb-b7e3d8f8d620" x="0" y="0" width="65" height="36" forecolor="#FFFFFF" fontName="SimHei" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[商品編號]]></text>
+		</element>
+		<element kind="staticText" uuid="cbeefe4c-4488-4acd-8cf8-3e5b0e13a3b6" x="65" y="0" width="144" height="36" forecolor="#FFFFFF" fontName="SimHei" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[商品名稱]]></text>
+		</element>
+		<element kind="staticText" uuid="12b750d8-0a0e-4094-8dfd-6949220a6ac1" x="210" y="0" width="164" height="36" forecolor="#FFFFFF" fontName="SimHei" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[商品描述]]></text>
+		</element>
+		<element kind="staticText" uuid="b1ddf8ab-75ad-49c6-9fe3-2dfc82aebd20" x="375" y="0" width="100" height="36" forecolor="#FFFFFF" fontName="SimHei" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[種類]]></text>
+		</element>
+		<element kind="staticText" uuid="63ed0d93-e9b0-4721-8ea6-ae2b21a3d1bd" x="475" y="0" width="80" height="36" forecolor="#FFFFFF" fontName="SimHei" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[售價]]></text>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="50" splitType="Stretch">
+			<element kind="rectangle" uuid="0ea1c4da-579a-407f-99e1-65a4a769550a" x="0" y="0" width="555" height="44" backcolor="#FFFDF9" mode="Opaque"/>
+			<element kind="textField" uuid="17b3d5f6-0da6-4821-bb3f-92719e376960" x="0" y="0" width="65" height="44" fontName="SimHei" fontSize="10.0" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{id}]]></expression>
+			</element>
+			<element kind="textField" uuid="b5cac292-99ce-492c-afe7-f5df0232355a" x="65" y="0" width="144" height="44" forecolor="#5A3E2B" fontName="SimHei" fontSize="10.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{title}]]></expression>
+			</element>
+			<element kind="textField" uuid="24548281-58b7-4679-82de-97e75d56d5fa" x="210" y="0" width="164" height="44" fontName="SimHei" fontSize="9.0" textAdjust="StretchHeight" hTextAlign="Left" vTextAlign="Middle">
+				<expression><![CDATA[$F{description}]]></expression>
+			</element>
+			<element kind="textField" uuid="6157a78b-1ffc-4ac5-886e-73645917fdae" x="375" y="0" width="100" height="44" fontName="SimHei" fontSize="10.0" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$F{category}]]></expression>
+			</element>
+			<element kind="textField" uuid="13c3ac5a-93c4-43b2-b98b-940c026274c2" x="475" y="0" width="68" height="44" fontName="SimHei" fontSize="10.0" pattern="#,##0" bold="true" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{price}]]></expression>
+			</element>
+			<element kind="line" uuid="e37aeaa1-7db6-42b5-9858-99b10a49fdaf" x="0" y="44" width="555" height="1" forecolor="#D8C8B8"/>
+		</band>
+	</detail>
+	<columnFooter height="10" splitType="Stretch"/>
+	<pageFooter height="35" splitType="Stretch">
+		<element kind="line" uuid="b58cdbc9-b165-4203-8b45-8eec3c7b0e0a" x="0" y="5" width="555" height="1" forecolor="#C8B8A8"/>
+		<element kind="staticText" uuid="d0132d1f-100c-41c7-acb6-2eeba1f03ab8" x="0" y="10" width="250" height="18" forecolor="#7A6A5E" fontName="SimHei" fontSize="8.0">
+			<text><![CDATA[潘媽媽烘焙坊｜商品報表]]></text>
+		</element>
+		<element kind="textField" uuid="7554d30f-cff6-4b74-80a9-c845ae7211db" x="455" y="10" width="100" height="18" forecolor="#7A6A5E" fontName="SimHei" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA["第 " + $V{PAGE_NUMBER} + " 頁"]]></expression>
+		</element>
+	</pageFooter>
+	<summary height="20" splitType="Stretch"/>
+</jasperReport>
