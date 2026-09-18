@@ -31,7 +31,7 @@ public class ProductReportTest {
 
 	// 使用你的 MyBatis DAO
 	@Autowired
-	@Qualifier("productDaoMybatis")
+	@Qualifier("ProductDaoMybatis")
 	private ProductDao productDao;
 
 	@Test
