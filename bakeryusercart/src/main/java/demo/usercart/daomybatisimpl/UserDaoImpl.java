@@ -1,36 +1,37 @@
-package demo.usercart.daojpaimpl;
+package demo.usercart.daomybatisimpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import demo.usercart.dao.UserDao;
+import demo.usercart.mapper.UserMapper;
 import demo.usercart.model.User;
-import demo.usercart.repository.UserRepository;
 
-@Repository("UserDaoJpa")
-public class UserDaoImpl implements UserDao{
+@Repository("UserDaoMybatis")
+public class UserDaoImpl implements UserDao {
 	
 	@Autowired
-	UserRepository userRepository;
+	UserMapper userMapper;
 
 	@Override
 	public User findByUsername(String username) {
-		return userRepository.findByUsername(username);
+		return userMapper.findByUsername(username);
 	}
 
 	@Override
 	public boolean existsByUsername(String username) {
-		return userRepository.existsByUsername(username);
+		return userMapper.existsByUsername(username);
 	}
 
 	@Override
 	public boolean existsByEmail(String email) {
-		return userRepository.existsByEmail(email);
+		return userMapper.existsByEmail(email);
 	}
 
 	@Override
 	public User save(User user) {
-		return userRepository.save(user);
+		userMapper.insert(user);
+	    return user;
 	}
 
 }

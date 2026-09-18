@@ -1,4 +1,4 @@
-package demo.usercart.daojpaimpl;
+package demo.usercart.daomybatisimpl;
 
 import java.util.List;
 
@@ -6,18 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import demo.usercart.dao.OrderItemDao;
+import demo.usercart.mapper.OrderItemMapper;
 import demo.usercart.model.OrderItem;
-import demo.usercart.repository.ItemRepository;
 
-@Repository("OrderItemDaoJpa")
+@Repository("OrderItemDaoMybatis")
 public class OrderItemDaoImpl implements OrderItemDao{
 	
 	@Autowired
-	ItemRepository itemRepository;
+	OrderItemMapper orderItemMapper;
 
 	@Override
 	public List<OrderItem> findByOrderId(Integer orderid) {
-		return itemRepository.findByOrderId(orderid);
+		return orderItemMapper.findByOrderId(orderid);
 	}
 
 }
