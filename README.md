@@ -1,468 +1,419 @@
-# 潘媽媽烘焙坊購物車專案：專案介紹與使用方法
+# 潘媽媽烘焙坊購物車專案
 
-本專案是一個前後端分離的烘焙商品購物網站，提供商品瀏覽、會員登入、購物車、結帳、訂單查詢及訂單評論功能。前端負責畫面與操作，後端處理權限、資料驗證與交易，MySQL 保存會員、商品、訂單及圖片等資料。
+本專案以 React 與 Spring Boot 建立前後端分離的烘焙商品購物網站，串接 MySQL 完成會員驗證、商品瀏覽、購物車、配送結帳、訂單查詢及圖片評論。
+
+前端管理操作與畫面狀態；後端驗證登入身分、資料歸屬及輸入內容，決定成交價格與運費；資料庫保存訂單快照、評論、圖片及登入憑證紀錄。本文件著重目前功能的方法與設計邏輯。
 
 ## 目錄
 
 1. [專案功能](#1-專案功能)
 2. [技術架構與目錄](#2-技術架構與目錄)
-3. [執行環境](#3-執行環境)
-4. [資料庫設定](#4-資料庫設定)
-5. [後端啟動](#5-後端啟動)
-6. [前端啟動](#6-前端啟動)
-7. [網站操作流程](#7-網站操作流程)
-8. [登入與權限機制](#8-登入與權限機制)
-9. [評論圖片與交易](#9-評論圖片與交易)
-10. [商品資料及圖片維護](#10-商品資料及圖片維護)
+3. [前後端通訊與設定](#3-前後端通訊與設定)
+4. [網站操作流程](#4-網站操作流程)
+5. [會員登入與權限機制](#5-會員登入與權限機制)
+6. [商品與購物車邏輯](#6-商品與購物車邏輯)
+7. [結帳與訂單邏輯](#7-結帳與訂單邏輯)
+8. [評論圖片與交易](#8-評論圖片與交易)
+9. [評論搜尋與後端分頁](#9-評論搜尋與後端分頁)
+10. [商品圖片與報表](#10-商品圖片與報表)
 11. [資料表與-api](#11-資料表與-api)
-12. [日常啟停與問題排查](#12-日常啟停與問題排查)
-13. [目前版本需確認的事項](#13-目前版本需確認的事項)
+12. [核心設計整理](#12-核心設計整理)
 
 ## 1. 專案功能
 
-### 商品與購物車
+| 功能 | 說明 |
+| --- | --- |
+| 商品瀏覽 | 商品列表、分類、每頁 12 筆的前端分頁、商品圖片 |
+| 會員功能 | 註冊、登入、登出、短效 JWT 與 Refresh Token 輪替 |
+| 購物車 | 加入商品、合併相同商品、調整數量、小計與移除確認 |
+| 配送結帳 | 黑貓宅配、7-11、全家、到店取貨及對應資料驗證 |
+| 付款選擇 | 依配送方式提供銀行轉帳、貨到付款或到店現金 |
+| 訂單查詢 | 本人訂單、商品明細、成交金額、配送及付款資訊 |
+| 訂單評論 | 1～5 星、文字、最多 5 張圖片、修改評論 |
+| 公開評論 | 帳號遮罩、訂單商品摘要、圖片、搜尋與後端分頁 |
+| 圖片儲存 | 商品與評論圖片以二進位內容保存於 MySQL |
+| 商品報表 | 使用 JasperReports 產生商品 PDF 清單 |
 
-- 商品列表顯示商品名稱、圖片與價格。
-- 可依麵包、吐司、點心等分類瀏覽商品。
-- 商品頁提供分頁與加入購物車操作。
-- 購物車可調整數量、計算商品小計及移除商品。
-- 數量即將減至零或按刪除時，先確認是否移除商品。
-- 提供商品 PDF 清單功能，報表由後端產生。
-
-### 會員與訂單
-
-- 註冊帳號、登入與登出。
-- 使用短效 Access Token 與長效 Refresh Token 維持登入。
-- 結帳頁提供配送、收件資料與付款方式選擇。
-- 查詢自己的訂單、商品明細及配送付款資訊。
-- 後端檢查訂單歸屬，避免會員查詢別人的訂單。
-
-### 訂單評論
-
-- 對自己的訂單評分及撰寫評論。
-- 支援圖片上傳、預覽及修改評論。
-- 公開列表顯示評分、內容、圖片與該訂單購買的商品。
-- 公開帳號顯示經過遮罩處理。
-- 支援評論文字或訂單商品名稱的關鍵字搜尋與後端分頁。
+付款功能保存付款方式與狀態，建立訂單時為待付款，不代表已進行銀行扣款。超商取貨使用門市名稱與代碼表單，不會因此自動向物流業者建立配送委託。
 
 ## 2. 技術架構與目錄
 
-| 項目 | 使用技術 |
+### 技術組成
+
+| 層級 | 技術 |
 | --- | --- |
-| 前端 | React 19、Vite、JavaScript、CSS |
+| 前端 | React 19、JavaScript、CSS |
+| 開發伺服器 | Vite 與 API 代理 |
 | 後端 | Java 21、Spring Boot 4.1.1、Maven |
 | 資料存取 | Spring Data JPA、MyBatis |
-| 資料庫 | MySQL 8.0 |
-| 登入驗證 | JWT、RSA 金鑰、Refresh Token |
+| 資料庫 | MySQL 8.0，Docker 提供資料庫執行環境 |
+| 驗證 | BCrypt 密碼雜湊、RSA 簽章 JWT、Refresh Token |
 | 報表 | JasperReports |
-| 資料庫執行環境 | Docker 或本機 MySQL |
+
+### 專案目錄
 
 ```text
 專案根目錄/
 ├─ bakeryweb/
-│  ├─ package.json             前端依賴與執行指令
-│  ├─ package-lock.json        依賴版本鎖定
-│  ├─ vite.config.js           開發伺服器與 API 代理
-│  ├─ public/                  Logo 等公開靜態檔案
+│  ├─ vite.config.js           API 代理設定
+│  ├─ public/                  Logo 等靜態資源
 │  └─ src/
-│     ├─ App.jsx               頁面切換、登入狀態、購物車
-│     ├─ api/ApiService.js     API 呼叫與 Access Token 管理
-│     └─ components/          商品、購物車、結帳、訂單與評論元件
+│     ├─ App.jsx               頁面、登入狀態與購物車
+│     ├─ api/ApiService.js     HTTP 請求與 Token 管理
+│     └─ components/
+│        ├─ Navbar.jsx         導覽列
+│        ├─ Login.jsx          登入
+│        ├─ Register.jsx       註冊
+│        ├─ Products.jsx       商品列表
+│        ├─ Cart.jsx           購物車
+│        ├─ Checkout.jsx       結帳表單
+│        ├─ Orders.jsx         訂單與明細
+│        ├─ OrderReviewForm.jsx 評論新增與修改
+│        └─ Reviews.jsx        公開評論與搜尋
 └─ bakeryusercart/
-   ├─ pom.xml                  Java 依賴與建置設定
-   ├─ mvnw.cmd                 Windows Maven Wrapper
+   ├─ pom.xml
    └─ src/main/
       ├─ java/demo/usercart/
-      │  ├─ controller/       HTTP API 與請求處理
-      │  ├─ service/          業務規則、資料驗證與交易
-      │  ├─ dao/              資料存取介面及相關實作
-      │  ├─ repository/       JPA Repository
+      │  ├─ controller/        API 入口
+      │  ├─ service/           業務介面與實作、驗證及交易
+      │  ├─ dao/               資料存取介面
+      │  ├─ daojpaimpl/        JPA DAO 實作
+      │  ├─ daomybatisimpl/    MyBatis DAO 實作
+      │  ├─ repository/       JPA 查詢
       │  ├─ mapper/           MyBatis Mapper 介面
-      │  ├─ model/            Entity、列舉與 Token 工具
-      │  ├─ dto/              API 請求與回應格式
-      │  ├─ exception/        例外與統一錯誤回應
-      │  └─ runner/           商品圖片匯入啟動程式
+      │  ├─ model/            Entity、列舉與目前的 Token 工具
+      │  ├─ dto/              請求與回應格式
+      │  ├─ exception/        業務例外與錯誤回應
+      │  └─ runner/           商品圖片匯入入口
       └─ resources/
          ├─ application.properties
-         ├─ Mapper/           SQL 映射 XML
-         ├─ keys/             本機 JWT 金鑰
+         ├─ Mapper/           SQL XML
+         ├─ keys/             JWT 金鑰
          ├─ reports/          報表範本
          └─ fonts/            報表字型
 ```
 
-DAO 實作的實際套件位置以專案檔案為準。主要呼叫方向為：
+### 分層責任
 
 ```text
-React 畫面 → ApiService → Controller → Service → DAO
-                                               ├─ JPA Repository
-                                               └─ MyBatis Mapper → SQL XML
-                                                        ↓
-                                                      MySQL
+React → ApiService → Controller → Service → DAO 介面
+                                             ├─ JPA 實作 → Repository
+                                             └─ MyBatis 實作 → Mapper XML
+                                                                 ↓
+                                                               MySQL
 ```
 
-Service 集中處理業務邏輯，使用 `@Qualifier` 指定要注入的 DAO 實作。不是所有功能都已提供兩種資料存取實作，切換前需確認對應 Bean 存在。
+- **Controller**：接收 JSON、multipart、參數及 Header，解析登入身分並回傳 HTTP 結果。
+- **Service**：集中業務規則，例如評論歸屬、配送付款限制、價格計算及交易範圍。
+- **DAO**：定義資料存取契約，Service 以 `@Qualifier` 選擇實際注入的實作。
+- **Repository／Mapper**：執行查詢與寫入。
+- **DTO**：控制請求及回應欄位，避免將前端輸入直接當作完整資料庫實體保存。
 
-## 3. 執行環境
+現有訂單使用 MyBatis DAO，評論與 Refresh Token 使用 JPA DAO。資料存取實作可替換的範圍依各 DAO 已提供的方法與 Bean 而定。商品 PDF 入口直接透過 ProductDao 查詢報表資料。
 
-準備以下工具：
+## 3. 前後端通訊與設定
 
-- JDK 21，並確認 IDE 與命令列使用相容的 Java。
-- 可執行目前 Vite 版本的 Node.js 與 npm；安裝時若出現 engines 不相容訊息，應先調整 Node.js 版本。
-- Docker Desktop（使用容器資料庫時）。
-- MySQL Workbench 或其他 MySQL 用戶端。
-- Eclipse、IntelliJ IDEA 或其他 Java IDE；前端可使用 VS Code。
+`ApiService.js` 使用相對路徑 `/api`，`vite.config.js` 將請求代理到後端：
 
-常用開發連接埠：
+```text
+瀏覽器頁面 localhost:5173
+      ↓ fetch('/api/products')
+瀏覽器請求 localhost:5173/api/products
+      ↓ Vite 代理
+Spring Boot localhost:8080/api/products
+      ↓
+資料庫查詢 → 回傳商品 JSON
+```
 
-| 服務 | 位址／連接埠 | 說明 |
+瀏覽器這一段與頁面同來源，8080 是 Vite 轉送的目的地。CORS 允許來源設定不會改變 fetch 的網址，也不能取代 JWT 權限檢查。
+
+| 位置 | 設定責任 |
+| --- | --- |
+| `vite.config.js` | 開發環境 API 代理 |
+| `ApiService.js` | API 路徑、Header、Token 刷新與重試 |
+| `application.properties` | 資料庫、JPA／MyBatis、Cookie、上傳及圖片匯入 |
+| `JwtUtility.java` | 金鑰讀取、JWT 產生與驗證 |
+| `UserController.java` | Refresh Token Cookie 設定及清除 |
+
+Docker 執行 MySQL，Volume 保存資料；Workbench 只是管理用戶端。關閉 Workbench 不會停止 MySQL，停止資料庫容器則會影響資料查詢。Vite 的開發代理與正式部署的反向代理是不同設定層次。
+
+## 4. 網站操作流程
+
+```text
+瀏覽商品 → 加入購物車 → 確認數量 → 登入 → 選擇配送與付款
+                                                  ↓
+公開評論 ← 新增／修改評論 ← 查看訂單明細 ← 建立訂單
+```
+
+1. 選擇商品分類、數量並加入購物車。
+2. 確認購物車；刪除或數量減至零時先確認移除。
+3. 登入後填寫收件人、手機與配送專屬資料。
+4. 選擇付款方式，確認預估金額後送出。
+5. 後端驗證及建立訂單，前端依回傳結果顯示金額、清空購物車並切換至訂單。
+6. 在本人訂單明細評分、撰寫評論及上傳圖片。
+7. 公開評論頁提供閱讀、關鍵字搜尋及頁次切換。
+
+## 5. 會員登入與權限機制
+
+### 註冊與登入
+
+`UserServiceImpl.register()` 檢查帳密與重複帳號、Email，以 BCrypt 雜湊密碼後保存。登入的 `login()` 查詢會員，以 `passwordEncoder.matches()` 比對密碼；不是先解密資料庫密碼。
+
+成功後產生 Access Token，並呼叫 `RefreshTokenServiceImpl.createToken()` 建立刷新憑證，由 Controller 回傳 JSON 與 Cookie。
+
+| 資料 | 保存位置 | 用途 |
 | --- | --- | --- |
-| 前端 | `http://localhost:5173` | Vite 預設開發位址，以啟動輸出為準 |
-| 後端 | `http://localhost:8080` | Spring Boot API |
-| 原本本機 MySQL | `localhost:3306` | 目前 properties 仍是此設定 |
-| 既有 Docker MySQL | `127.0.0.1:3307` | 電腦端對外連接埠 |
-| Docker 內 MySQL | `3306` | 容器內部連接埠 |
+| 密碼雜湊 | users | 驗證密碼 |
+| Access Token | ApiService.js 記憶體 | 15 分鐘效期，用於受保護 API |
+| Refresh Token 原始值 | HttpOnly Cookie | 取得新憑證，初始期限 7 天 |
+| Refresh Token SHA-256 | refresh_tokens.token_hash | 查核刷新憑證，不保存原始 Token |
 
-## 4. 資料庫設定
+Cookie 使用 `/api/user` 路徑、SameSite Strict，Secure 依環境設定。Access Token 透過 Authorization 傳遞，不存放於 Local Storage。
 
-### 4.1 啟動既有容器
+### 恢復登入與請求重試
 
-若先前已建立名為 `bakery-mysql` 的容器，開啟 Docker Desktop，啟動該容器；或在終端機執行：
+`App.jsx` 載入時呼叫 `refreshLogin()`。重新整理會失去記憶體 Token，因此使用 Cookie 恢復登入，成功後重新建立前端狀態。
 
-```bat
-docker start bakery-mysql
-docker ps
-```
+`authFetch()` 先等待正在進行的刷新；沒有 Token 時先刷新，再以 Bearer Header 發送請求。遇到 401 時檢查是否已有新 Token，必要時換發，原請求最多重試一次。
 
-以上命令不會建立新容器。第一次安裝的環境需先建立 MySQL、資料庫、帳號與持久化 Volume。
+同一頁面的請求共用 `refreshPromise`，避免每筆 API 都同時刷新；它不是跨瀏覽器分頁的全域鎖。
 
-### 4.2 Workbench 連線
+### Refresh Token 輪替
 
-既有 Docker 環境使用：
+`refresh()` 在交易內：
 
-| 欄位 | 範例 |
+1. 驗證格式，計算 SHA-256。
+2. 依雜湊查詢並鎖定紀錄。
+3. 檢查已使用、撤銷與到期狀態。
+4. 標記舊憑證已使用，建立新憑證。
+5. 沿用同一 `familyId` 與原始到期時間，不因刷新持續延長七天。
+6. 回傳新 Access Token，由 Controller 更新 Cookie。
+
+已使用的 Token 再次出現時撤銷同一家族。此分支回傳失敗狀態，使撤銷能完成交易，不拋出會使撤銷本身回滾的例外。
+
+### 登出與歸屬檢查
+
+`logout()` 撤銷登入家族，Controller 清除 Cookie，前端清除 Token 及購物車。已發出的 Access Token 沒有因此加入即時黑名單，仍有原先效期。
+
+需要登入的 Controller 呼叫 `extractUsernameFromAuthorization()`，再檢查訂單或評論歸屬。前端顯示登入按鈕或隱藏功能只影響操作介面；後端才決定是否能讀寫資料。公開商品及評論可直接讀取，一般會員不能查詢全部會員訂單。
+
+## 6. 商品與購物車邏輯
+
+### 商品列表
+
+`Products.jsx` 依分類呼叫 `fetchProducts()` 或 `fetchProductsByCategory()`，保存結果後用 `slice()` 顯示每頁 12 筆。分類變更時回到第一頁，各商品選購數量依商品 ID 分別保存。
+
+這是前端分頁：先取回該分類商品，再切出目前要顯示的資料。
+
+### 購物車
+
+`App.jsx` 管理 cart state，透過 props 傳遞至各元件。
+
+| 方法 | 邏輯 |
 | --- | --- |
-| Hostname | `127.0.0.1` |
-| Port | `3307` |
-| Username | `bakery_user` |
-| Password | 建立容器時設定的密碼 |
-| Schema | `mydb` |
+| `addToCart()` | 新商品加入，已有商品合併數量 |
+| `updateCartQuantity()` | 調整指定商品數量 |
+| `removeFromCart()` | 移除指定項目 |
+| `handleGoToCheckout()` | 檢查登入及購物車後切換頁面 |
+| `handleCheckoutSuccess()` | 依後端訂單顯示結果、清空購物車及切換頁面 |
 
-可執行以下 SQL 確認資料：
+移除前先取得確認，再更新 state。`Cart.jsx` 以單價乘數量累加小計。
 
-```sql
-USE mydb;
-SHOW TABLES;
-SELECT COUNT(*) AS product_count FROM products;
-```
+購物車是 React 記憶體資料，不是 Redis 或持久化資料庫購物車；重新整理後可能清空。畫面金額提供預覽，成交金額由後端決定。
 
-空白資料庫可以由既有備份還原結構與資料。Hibernate 的 `ddl-auto=update` 不會自動建立完整商品內容，也不能代替備份或正式資料庫版本遷移。
+## 7. 結帳與訂單邏輯
 
-### 4.3 後端連線設定
+### 配送及付款規則
 
-開啟 `bakeryusercart/src/main/resources/application.properties`。
-
-若後端在 Windows 上執行，要連到上述 Docker MySQL，可設定：
-
-```properties
-spring.datasource.url=jdbc:mysql://127.0.0.1:3307/mydb
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-```
-
-`DB_USERNAME` 與 `DB_PASSWORD` 是建議採用的環境變數寫法，需自行修改 properties 才會生效；目前原始檔仍是直接設定值。可在 IDE 的 Run Configuration → Environment 設定兩個變數。
-
-## 5. 後端啟動
-
-### 5.1 匯入專案
-
-以 Existing Maven Project 匯入 `bakeryusercart`，等待 Maven 下載依賴。使用 JDK 21，確認 IDE 能正確處理 Lombok。
-
-### 5.2 JWT 金鑰
-
-目前 `JwtUtility.java` 從 classpath 讀取：
-
-```text
-src/main/resources/keys/private.pem
-src/main/resources/keys/public.pem
-```
-
-私鑰須為程式支援的 PKCS#8 PEM，公鑰須為 X.509 PEM，且為同一組 RSA 金鑰。不要公開或共用正式私鑰。
-
-新環境沒有金鑰時，可在有 OpenSSL 的環境中，於自己準備的空白金鑰目錄執行下列指令，再放到上述位置。不要覆蓋正在使用的金鑰：
-
-```text
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem
-openssl pkey -in private.pem -pubout -out public.pem
-```
-
-更換金鑰後，舊 Access Token 將無法通過新公鑰驗證。
-
-### 5.3 開發設定
-
-```properties
-app.auth.cookie-secure=false
-app.product-image.import-enabled=false
-```
-
-第一個設定適用於本機 HTTP。使用正式 HTTPS 時應調整 Cookie 設定；第二個設定代表平常啟動不執行商品圖片匯入。
-
-### 5.4 執行
-
-在 IDE 啟動 Spring Boot 主程式；或開啟 CMD，切換到 `bakeryusercart` 後執行：
-
-```bat
-mvnw.cmd spring-boot:run
-```
-
-確認 Console 顯示應用程式啟動完成，且沒有資料庫、金鑰或 Mapper 初始化錯誤。可開啟 `http://localhost:8080/api/products` 檢查是否回傳商品 JSON。
-
-## 6. 前端啟動
-
-在另一個终端機切換至 `bakeryweb`，執行：
-
-```bat
-npm ci
-npm run dev
-```
-
-`npm ci` 依 package-lock.json 安裝依賴；如果 lockfile 與 package.json 不一致，先確認哪份檔案才是正確版本。依終端機輸出的 Local URL 開啟網站。
-
-目前 `vite.config.js` 將 `/api` 代理到：
-
-```text
-http://localhost:8080
-```
-
-因此瀏覽器請求 `/api/products` 時，Vite 會轉送給 Spring Boot。後端連接埠變更時，也需同步修改代理。
-
-其他指令：
-
-| 指令 | 用途 |
-| --- | --- |
-| `npm run build` | 建置前端，輸出至 dist |
-| `npm run lint` | 執行 ESLint |
-| `npm run preview` | 預覽前端建置結果 |
-
-開發代理設定不能當作正式網站的 API 路由配置。正式服務需另外設定 `/api` 反向代理或前端 API 位址。
-
-## 7. 網站操作流程
-
-### 7.1 註冊與登入
-
-1. 開啟「帳戶登入」。
-2. 初次使用者前往註冊，填寫帳號、密碼、姓名及 Email。
-3. 註冊成功後登入。
-4. 導覽列顯示帳號與登出按鈕。
-
-登入失敗時依畫面訊息檢查帳密。重新開啟網站仍保持登入，可能是有效的 Refresh Token 恢復登入，屬於目前設計。
-
-### 7.2 瀏覽商品
-
-1. 點選「商品列表」。
-2. 選擇分類與頁次。
-3. 選擇數量並加入購物車。
-4. 導覽列的購物車數量會更新。
-
-商品清單目前由前端顯示分頁；公開評論則由後端分頁，兩者方式不同。
-
-### 7.3 購物車
-
-1. 點選「購物車」。
-2. 檢查商品、單價、數量及小計。
-3. 使用加減按鈕調整數量。
-4. 數量減至零或按刪除時，確認「確定要移除該商品」；取消則保留商品。
-5. 登入後前往結帳。
-
-購物車目前由 App.jsx 的 React state 保存。它不是 Redis，也不是持久化的資料庫購物車；重新整理可能清空購物車。
-
-### 7.4 配送與付款
-
-結帳頁填寫收件人姓名、手機，再選擇配送方式：
-
-| 配送方式 | 運費 | 配送專屬資料 | 可選付款方式 |
+| 配送方式 | 運費 | 專屬資料 | 付款方式 |
 | --- | ---: | --- | --- |
 | 黑貓宅配 | NT$140 | 配送地址 | 銀行轉帳 |
-| 7-11 取貨 | NT$60 | 門市名稱、門市代碼 | 貨到付款、銀行轉帳 |
-| 全家取貨 | NT$60 | 門市名稱、門市代碼 | 貨到付款、銀行轉帳 |
-| 到店取貨 | NT$0 | 取貨日期 | 到店現金付款、銀行轉帳 |
+| 7-11 取貨 | NT$60 | 門市名稱、代碼 | 轉帳、貨到付款 |
+| 全家取貨 | NT$60 | 門市名稱、代碼 | 轉帳、貨到付款 |
+| 到店取貨 | NT$0 | 取貨日期 | 轉帳、到店現金 |
 
-目前超商資料由表單填寫，不代表已串接超商地圖或物流服務。
+`DeliveryMethod` 定義配送方式與運費，`PaymentMethod.supports()` 驗證付款組合。使用固定列舉代碼，避免自由文字導致判斷不一致。
 
-確認商品小計、運費及總額後送出。例如商品小計 NT$1,000、宅配 NT$140，預計合計 NT$1,140。
+### 建立訂單的方法
 
+`submitOrder()` 只送商品 ID、數量、收件及配送付款資料，不傳成交價格、總額、會員 ID 或已付款狀態。
 
-目前轉帳銀行、戶名及帳號仍為「待設定」。訂單送出不等於付款完成，本專案沒有在此流程中進行銀行扣款。
+`OrderController.createOrder()` 接收 `CheckoutRequest`，由 JWT 取得帳號，呼叫 `OrderServiceImpl.checkout()`，成功回傳 HTTP 201。
 
-### 7.5 查詢訂單
+`checkout()` 依序執行：
 
-登入後點「訂單」，查看訂單紀錄並展開明細。新訂單預期顯示：
+1. 檢查會員與非空購物車。
+2. 驗證配送、付款及收件人；手機為 09 開頭的十碼數字。
+3. 宅配保存地址、超商保存門市資訊、到店保存取貨日期；取貨日期不得早於台北時區的今天。
+4. 檢查商品 ID、正數數量與重複商品列，逐筆查詢資料庫。
+5. 驗證價格為有限、非負且可保存的整數元，使用 BigDecimal 計算。
+6. 由後端取得運費，設定商品小計、總額及待付款狀態。
+7. 保存主檔及全部明細，金額轉整數欄位時檢查範圍。
 
-- 訂單編號、建立時間與總額。
-- 購買商品、成交單價與數量。
-- 商品小計、運費。
-- 配送方式、收件人與手機。
-- 宅配地址、超商資訊或取貨日期。
-- 付款方式與付款狀態。
+因此使用者即使修改前端金額，也不能直接指定後端成交價。
 
-歷史訂單可能沒有新增的配送欄位，不能將空值視為已填寫的收件資料。
+### 歷史價格快照
 
-### 7.6 新增及修改評論
+建立明細時保存商品名稱、單價及數量：
 
-1. 開啟自己的訂單明細。
-2. 在評論區點選 1 至 5 顆星。
-3. 可填寫評論文字，最多 2,000 個 Unicode 字元。
-4. 可選擇 JPEG 或 PNG 圖片，確認預覽後送出。
-5. 已有評論時可修改評分、文字，新增圖片或移除既有圖片。
-6. 按送出修改，成功後才完成資料庫更新。
+```java
+orderItem.setProductTitle(product.getTitle());
+orderItem.setProductPrice(unitPrice.intValueExact());
+orderItem.setQuantity(item.quantity());
+```
 
-每張訂單對應一筆評論。修改時既有圖片與新增圖片合計不得超過上限。若出現版本衝突，重新載入最新評論後再修改。
+`products.price` 是目前售價；`orderitems.productPrice` 是成交單價；`orders.totalPrice` 是訂單總額。歷史查詢直接讀訂單，不用商品現價重算。
 
-### 7.7 瀏覽公開評論
+例如以 100 元購買兩件商品，之後現價改成 120 元，舊訂單仍保留 100 元單價及原總額。
 
-點導覽列「評論」即可閱讀公開內容。輸入關鍵字搜尋評論文字或該訂單商品名稱，再切換頁次。
+### 訂單交易
 
-帳號遮罩例子：`peter` 顯示 `p***r`；一字元帳號顯示 `*`，二字元帳號顯示首字元加 `*`。這是顯示遮罩，不能保證無法透過評論內容辨識作者。
+`checkout()` 使用 `@Transactional(rollbackFor = Exception.class)`。MyBatis DAO 先新增訂單並取得自動 ID，再將 ID 關聯至各明細後保存。交易失敗時回滾，避免只保存訂單主檔或部分商品。
 
-## 8. 登入與權限機制
+`Orders.jsx` 顯示保存的金額、商品明細及配送付款資料，後端同時驗證資料屬於登入者。
 
-| 項目 | 存放位置／行為 |
+## 8. 評論圖片與交易
+
+### 新增評論
+
+`OrderReviewForm.jsx` 收集評分、文字及圖片，`buildReviewFormData()` 將 JSON 放入 review 部分、檔案放入 images 部分。
+
+Controller 使用 `@RequestPart`，因為請求同時包含 JSON 與二進位檔案。前端交由瀏覽器設定 multipart boundary，不手動拼接 Content-Type。
+
+`createReview()` 驗證訂單歸屬、重複評論、評分、文字及圖片後，保存評論與圖片。一張訂單對應一筆評論。
+
+| 規則 | 限制 |
 | --- | --- |
-| Access Token | ApiService.js 記憶體變數，有效期 15 分鐘 |
-| Refresh Token 原始值 | HttpOnly Cookie，初始期限 7 天 |
-| Refresh Token 雜湊 | refresh_tokens 資料表 |
-| 受保護 API | Authorization: Bearer 加上 Access Token |
+| 評分 | 必填，1～5 星 |
+| 文字 | 可空白，最多 2,000 個 Unicode 字元 |
+| 圖片 | 可不附圖，最多 5 張 |
+| 單檔 | 最多 5 × 1024 × 1024 bytes |
+| 格式 | JPEG、PNG，驗證實際內容 |
+| 尺寸 | 單邊最多 10,000 像素，總像素最多 20,000,000 |
+| 整個請求 | multipart 上限 30MB |
 
-登入取得 Access Token；重新整理後透過 Cookie 呼叫 `/api/user/refresh` 恢復。換發 Refresh Token 時進行輪替，保留該次登入原始到期時間。登出會撤銷對應的 Refresh Token 家族並清除 Cookie。
+`ReviewImageValidator` 驗證大小、格式與解碼結果，不只看副檔名。圖片本體與 MIME 存入資料庫，列表以 URL 指向獨立圖片 API。
 
-HttpOnly Cookie 不由前端 JavaScript 直接讀取。Local Storage 沒有 token 是目前設計；App.jsx 還會移除舊版遺留的 token。
+### 修改評論
 
-需要登入的行為由後端 Controller 驗證 JWT，再由 Controller / Service 檢查資料歸屬。前端隱藏按鈕不能取代後端權限驗證。
+`updateReview()` 接收 version、評分、文字、retainedImageIds 與新圖片：
 
-商品與公開評論可公開讀取；個人訂單、建立訂單、自己的評論讀取及寫入需要登入。現有查詢全部會員訂單的 API 被禁止，帳號叫 admin 不代表有管理員權限。
+1. 檢查評論存在、本人歸屬及版本。
+2. 檢查保留圖片 ID 無重複，且都屬於這筆評論。
+3. 計算保留加新增的總數並驗證新圖片。
+4. 更新評論、刪除不保留的圖片。
+5. 將保留圖片暫移到負數排序，再排回 0、1、2……，避免排序唯一限制衝突。
+6. 新圖片接續排列，全部成功後提交。
 
-## 9. 評論圖片與交易
+`@Version` 在更新時檢查樂觀鎖，避免較舊表單覆蓋別人的更新。`flush()` 將 SQL 送到資料庫以檢查限制，**不等於 commit**；中間排序仍可隨交易回滾。
 
-主要程式職責：
+### 交易及錯誤處理
 
-| 檔案 | 工作 |
-| --- | --- |
-| OrderReviewForm.jsx | 星星、文字、圖片預覽與編輯表單 |
-| ApiService.js | 組合 multipart FormData，送出 JSON review 與 images |
-| OrderReviewController.java | 以 @RequestPart 接收內容、驗證登入 |
-| OrderReviewServiceImpl.java | 歸屬與內容檢查、建立或修改評論、管理交易 |
-| ReviewImageValidator.java | 實際圖片格式、大小、尺寸與像素驗證 |
-| OrderReview / OrderReviewImage | 保存評論及圖片資料 |
-| GlobalExceptionHandler.java | 轉成前端可讀的錯誤回應 |
+新增和修改使用 `@Transactional(rollbackFor = Exception.class)`，圖片與評論在同一資料庫交易，失敗時不保留部分更新。
 
-Service 的寫入方法使用 `@Transactional(rollbackFor = Exception.class)`。評論與圖片的資料庫操作放在同一交易內，正常完成才提交；交易內符合回滾條件的例外會撤銷該交易已執行的資料庫修改。
+寫入前驗證失敗屬於拒絕寫入；執行 SQL 後出現符合回滾條件的例外，才是撤銷已執行的交易修改。
 
-格式錯誤也可能在寫入前就被驗證攔截，這種情況是「沒有寫入」，不能單靠它證明已寫入的資料確實回滾。
+`GlobalExceptionHandler` 將評論驗證、權限、不存在、版本／完整性衝突及上傳過大轉為 400、403、404、409、413，前端讀取 message 顯示。
 
-目前評論上傳限制：
+## 9. 評論搜尋與後端分頁
 
-| 項目 | 限制 |
-| --- | --- |
-| 圖片數量 | 最多 5 張 |
-| 單張檔案 | 最多 5 MiB（5 × 1024 × 1024 bytes） |
-| 格式 | JPEG、PNG |
-| 單邊尺寸 | 最大 10,000 像素 |
-| 總像素 | 最大 20,000,000 |
-| 整個 multipart 請求 | 30 MB（依 Spring 設定解析） |
+`Reviews.jsx` 區分搜尋框輸入與已送出的查詢條件，每次傳入 keyword、page、size，目前畫面使用每頁 10 筆。
 
-圖片內容存入資料庫 BLOB。資料庫交易不會自動回滾外部檔案系統的操作；本功能將評論圖片本體放在資料庫，才可與評論一起管理。
+`getReviews()` 的流程：
 
-## 10. 商品資料及圖片維護
+- Controller 接收參數，Service 驗證 page 不小於 0、size 為 1～50。
+- 建立 PageRequest，交由資料庫取得指定頁面。
+- 無關鍵字時使用 `findAllByOrderByCreatedAtDescIdDesc()` 對應的 DAO 查詢。
+- 有關鍵字時，將 LIKE 的特殊符號跳脫，匹配評論文字或訂單商品名稱。
+- 商品匹配使用 EXISTS，避免多件商品符合時重複列出評論。
+- 以 createdAt、id 降冪排序，使用相同條件計算總筆數。
 
-商品圖片欄位：
+回應包含 content、page、size、totalElements、totalPages。API 頁碼從 0 起算，前端依總頁數產生按鈕；只有一頁時無需顯示多頁選擇。
+
+`toResponse()` 組合公開 DTO、商品摘要及圖片 URL。`maskUsername()` 將三字元以上帳號顯示為首字元加 *** 加尾字元；兩字元保留首字元，一字元只顯示 *。這只改變公開顯示，不改寫 users 的原帳號。
+
+## 10. 商品圖片與報表
+
+### 商品圖片
 
 | 欄位 | 用途 |
 | --- | --- |
-| image | 保留的原始圖片檔名，供匯入使用 |
-| image_content_type | MIME 類型，例如 image/jpeg |
-| image_data | 圖片的實際二進位內容 |
+| image | 原始圖片檔名，供匯入比對 |
+| image_content_type | MIME 類型 |
+| image_data | 圖片二進位內容 |
 
-圖片已存入 image_data 後，不依賴前端來源檔案才能存在。Logo 等靜態資源與報表圖片來源可能仍使用檔案，不應直接刪除整個 public/images。
+`ProductImageImportRunner` 依啟用設定呼叫 `importProductImages()`，讀取指定資料夾、驗證內容，再透過 `saveImageIfAbsent()` 補入缺少圖片的商品。匯入有交易保護，不任意覆蓋既有圖片。
 
-維護新商品時：
+`getProductImage()` 讀取資料庫內容，Controller 設定 Content-Type、長度及 nosniff 回傳。商品及購物車以 `/api/products/{productId}/image` 載入照片。
 
-1. 使用 Workbench 連到網站實際使用的資料庫。
-2. 依 Product 實體與資料表填寫未使用的 id、名稱、分類、價格及其他欄位。
-3. 如果使用現有圖片匯入流程，image 欄位填對應檔名，將來源圖片放到設定的目錄。
-4. 設定 `app.product-image.import-directory` 為實際絕對路徑。
-5. 暫時設 `app.product-image.import-enabled=true`，重新啟動後端。
-6. 查看啟動日誌與資料庫，成功後改回 false。
+BLOB 保存後不依賴原始照片檔案才能存在；Logo、報表資源仍各自管理。資料庫備份需包含圖片內容，Volume 持久化不是另一份備份。
 
-現有匯入流程以補入未有圖片的商品為主，不能當作任意覆寫既有圖片的工具。匯入失敗時先查看格式、大小與尺寸錯誤，再修正来源檔案。
+### 商品 PDF
 
-可用以下查詢確認是否有圖片內容：
+`ProductReportController.downloadProductReport()` 查詢商品，建立 JRBeanCollectionDataSource，讀取並編譯 JRXML，填入資料後輸出 PDF。
 
-```sql
-SELECT id, title, image_content_type,
-       OCTET_LENGTH(image_data) AS image_bytes
-FROM products
-ORDER BY id;
-```
-
-資料庫備份必須包含 BLOB 資料。Docker Volume 可持久保存資料，但不等於另外一份備份。
+回應使用 application/pdf 與 inline Content-Disposition。報表呈現查詢時的商品資料，與歷史訂單的價格快照用途不同。
 
 ## 11. 資料表與 API
 
-### 11.1 主要資料表
+### 主要資料表
 
 | 資料表 | 用途 |
 | --- | --- |
-| users | 會員資料與密碼雜湊 |
-| products | 商品資訊與商品圖片 |
-| orders | 訂單主檔、金額與配送付款資料 |
-| orderitems | 訂單商品明細 |
-| refresh_tokens | Refresh Token 雜湊、效期與撤銷狀態 |
-| order_reviews | 訂單評論、評分與版本 |
-| order_review_images | 評論圖片內容與排序 |
+| users | 會員及密碼雜湊 |
+| products | 商品現價、分類與圖片 |
+| orders | 訂單主檔、金額、配送與付款 |
+| orderitems | 商品名稱、成交單價與數量快照 |
+| refresh_tokens | Token 雜湊、家族、效期與使用／撤銷狀態 |
+| order_reviews | 評分、評論、時間及版本 |
+| order_review_images | 圖片本體、MIME、大小與排序 |
 
-密碼雜湊與 token_hash 用途不同：前者驗證密碼，後者驗證刷新憑證。
+```text
+users ──< orders ──< orderitems
+  │          │
+  │          └── order_reviews ──< order_review_images
+  └──< refresh_tokens
+```
 
-### 11.2 常用 API
+一位會員可有多張訂單；一張訂單有多筆明細，最多一筆評論；每筆評論可有多張圖片。
+
+### API 概覽
 
 | 方法 | 路徑 | 用途 |
 | --- | --- | --- |
 | POST | /api/user/register | 註冊 |
-| POST | /api/user/login | 登入 |
-| POST | /api/user/refresh | 使用 Cookie 換發 Token |
+| POST | /api/user/login | 帳密登入 |
+| POST | /api/user/refresh | 使用 Cookie 換發憑證 |
 | POST | /api/user/logout | 登出 |
-| GET | /api/products | 商品列表 |
-| GET | /api/products/category/{category} | 分類商品 |
-| GET | /api/products/productid/{productid} | 單一商品 |
+| GET | /api/products | 公開商品列表 |
+| GET | /api/products/category/{category} | 分類查詢 |
+| GET | /api/products/productid/{productid} | 單品查詢 |
 | GET | /api/products/{productId}/image | 商品圖片 |
 | GET | /api/products/report | 商品 PDF |
-| POST | /api/orders | 建立訂單，目前需確認新結帳介面接線 |
-| GET | /api/orders/{username} | 個人訂單 |
-| GET | /api/orders/orderid/{orderid} | 自己的單筆訂單 |
-| GET | /api/items/{orderId} | 訂單明細 |
-| GET | /api/reviews?keyword=&page=0&size=10 | 公開評論與搜尋 |
-| GET | /api/reviews/order/{orderId} | 自己訂單的評論 |
+| POST | /api/orders | JWT 驗證後結帳，成功 201 |
+| GET | /api/orders/{username} | 本人訂單 |
+| GET | /api/orders/orderid/{orderid} | 本人單筆訂單 |
+| GET | /api/items/{orderId} | 本人訂單明細 |
+| GET | /api/reviews | 公開評論搜尋及分頁 |
+| GET | /api/reviews/order/{orderId} | 本人訂單評論，未評論回傳 204 |
 | POST | /api/reviews | 新增評論，multipart |
-| PUT | /api/reviews/{reviewId} | 修改評論，multipart |
-| GET | /api/reviews/{reviewId}/images/{imageId} | 評論圖片 |
+| PUT | /api/reviews/{reviewId} | 修改本人評論，multipart |
+| GET | /api/reviews/{reviewId}/images/{imageId} | 公開評論圖片 |
 
-評論分頁頁碼從 0 起算。列表包含 content、page、size、totalElements、totalPages；預設 size 為 10，前端可傳入自己的每頁筆數。
+## 12. 核心設計整理
 
-## 12. 日常啟停與問題排查
-
-啟動順序：MySQL → Spring Boot → Vite → 瀏覽器。停止時可先關閉前端與後端，再停止資料庫容器。
-
-| 現象 | 優先檢查 |
+| 設計 | 解決的問題 |
 | --- | --- |
-| 商品讀取失敗 | 後端、MySQL 是否啟動，以及 API 代理 |
-| MySQL 連線失敗 | 3306 / 3307 是否用錯、帳密、資料庫名稱 |
-| 網頁白畫面 | Chrome Console 是否有 React 變數或元件錯誤 |
-| refresh 回傳 401 | 尚未登入、Cookie 過期或已撤銷 |
-| 登入後仍一直 401 | Cookie、主機名是否一致、JWT 金鑰與效期 |
-| 訂單不存在或無法查看 | 訂單編號、登入帳號及訂單歸屬 |
-| 成功提示金額為 0 | 前後端 DTO 與 OrderController 是否仍走舊流程 |
-| 上傳 413 | 單檔與整個 multipart 大小限制 |
-| 圖片驗證失败 | 真實格式、尺寸、像素或損毀圖片 |
-| 修改評論 409 | 重新取得最新版本後修改 |
-| 商品圖片顯示不出來 | image_data、MIME 及圖片 API 回應 |
-| Linux 找不到 Mapper SQL | Mapper 目錄大小寫與 mapper-locations |
+| Service 業務與 DAO 存取分離 | 避免不同資料存取方式重複實作業務規則 |
+| 後端核價及配送列舉 | 避免前端指定不合法金額與付款組合 |
+| 訂單快照 | 商品改價後保留原成交內容 |
+| JWT 與 Refresh Token 輪替 | 短效憑證搭配可撤銷的長效登入紀錄 |
+| 本人歸屬檢查 | 防止透過修改 ID 操作別人的資料 |
+| 評論圖片同一交易 | 避免部分圖片或部分修改被保存 |
+| 樂觀鎖版本 | 防止過時表單覆蓋新資料 |
+| DTO 與帳號遮罩 | 控制公開資訊 |
+| 後端分頁、EXISTS 搜尋 | 取得指定頁面且避免重複評論 |
+| 獨立圖片 API | 圖片依需要另外讀取 |
 
-停掉 Docker MySQL 後，前端可能仍可顯示已載入的畫面，但需要資料庫的 API 會失敗。Workbench 是管理用戶端，關閉 Workbench 不等於關閉 MySQL。
+整體流程以「前端協助輸入，後端驗證規則，資料庫保存交易結果」為核心。畫面驗證改善操作體驗，後端權限及交易決定最終能保存的結果。
+

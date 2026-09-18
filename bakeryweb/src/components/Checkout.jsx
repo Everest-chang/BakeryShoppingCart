@@ -308,7 +308,6 @@ function Checkout({
               inputMode="numeric"
               pattern="09[0-9]{8}"
               maxLength={10}
-              placeholder="0912345678"
               title="請輸入 09 開頭的 10 碼手機號碼"
               required
             />
@@ -413,6 +412,7 @@ function Checkout({
               <p>帳號：{TRANSFER_INFO.accountNumber}</p>
               <p>測試用：收款帳號尚未設定，請勿匯款。</p>
               <p>送出訂單不代表已付款，需待確認收款。</p>
+              <p>確認收款後3-5個工作天內寄出。</p>
             </section>
           )}
 
