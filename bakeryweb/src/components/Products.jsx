@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchProducts, fetchProductsByCategory } from '../api/ApiService'
-import { openProductReport } from "../api/ApiService";
+
 
 function Products({ addToCart, category }) {
   const [products, setProducts] = useState([])

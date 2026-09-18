@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 import {
   createReview,
@@ -11,26 +11,30 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 // 本機圖片預覽，移除圖片或卸載時釋放 URL
 function LocalImagePreview({ file }) {
-  const [url, setUrl] = useState('')
+  const imageRef = useRef(null)
 
   useEffect(() => {
+    const image = imageRef.current
+    if (!image) return
+
     const objectUrl = URL.createObjectURL(file)
-    setUrl(objectUrl)
+    image.src = objectUrl
 
     return () => {
+      image.removeAttribute('src')
       URL.revokeObjectURL(objectUrl)
     }
   }, [file])
 
-  return url ? (
+  return (
     <img
-      src={url}
+      ref={imageRef}
       alt={file.name}
       width="120"
       height="120"
       style={{ objectFit: 'cover' }}
     />
-  ) : null
+  )
 }
 
 function OrderReviewForm({ orderId }) {

@@ -29,7 +29,7 @@ function Register({ setCurrentPage }) {
 
     setCurrentPage('login')
 
-  } catch (error) {
+  } catch {
 
     setErrorMsg('會員建立失敗！')
 
