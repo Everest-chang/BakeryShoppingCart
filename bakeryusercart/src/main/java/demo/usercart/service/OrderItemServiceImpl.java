@@ -15,7 +15,7 @@ import demo.usercart.repository.ItemRepository;
 public class OrderItemServiceImpl implements OrderItemService {
 	
 	@Autowired
-	@Qualifier("orderItemDaoMybatis")
+	@Qualifier("OrderItemDaoMybatis")
 	OrderItemDao orderItemDao;
 
 	@Override

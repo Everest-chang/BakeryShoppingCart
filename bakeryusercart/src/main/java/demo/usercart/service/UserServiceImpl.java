@@ -18,7 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class UserServiceImpl implements UserService {
 
 	@Autowired
-	@Qualifier("userDaoMybatis")
+	@Qualifier("UserDaoMybatis")
 	UserDao userDao;
 	@Autowired
 	JwtUtility jwtUtility;

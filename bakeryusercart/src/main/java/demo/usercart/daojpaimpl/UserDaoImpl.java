@@ -7,7 +7,7 @@ import demo.usercart.dao.UserDao;
 import demo.usercart.model.User;
 import demo.usercart.repository.UserRepository;
 
-@Repository("userDaoJpa")
+@Repository("UserDaoJpa")
 public class UserDaoImpl implements UserDao{
 	
 	@Autowired

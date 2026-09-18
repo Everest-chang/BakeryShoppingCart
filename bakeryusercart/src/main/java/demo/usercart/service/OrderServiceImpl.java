@@ -39,17 +39,17 @@ import demo.usercart.repository.UserRepository;
 public class OrderServiceImpl implements OrderService {
 
 	@Autowired
-	@Qualifier("orderDaoMybatis")
+	@Qualifier("OrderDaoMybatis")
 	private OrderDao orderDao;
 	@Autowired
 	private JwtUtility jwtUtility;
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
-	@Qualifier("productDaoMybatis")
+	@Qualifier("ProductDaoMybatis")
 	private ProductDao productDao;
 	@Autowired
-	@Qualifier("userDaoMybatis")
+	@Qualifier("UserDaoMybatis")
 	private UserDao userDao;
 
 	@Override

@@ -44,11 +44,11 @@ public class OrderReviewServiceImpl implements OrderReviewService {
 	private OrderReviewImageDao imageDao;
 
 	@Autowired
-	@Qualifier("orderDaoMybatis")
+	@Qualifier("OrderDaoMybatis")
 	private OrderDao orderDao;
 
 	@Autowired
-	@Qualifier("orderItemDaoMybatis")
+	@Qualifier("OrderItemDaoMybatis")
 	private OrderItemDao orderItemDao;
 
 	// 下一步建立，負責驗證圖片內容及大小

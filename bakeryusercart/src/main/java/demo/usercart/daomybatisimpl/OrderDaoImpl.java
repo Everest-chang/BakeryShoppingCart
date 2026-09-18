@@ -10,7 +10,7 @@ import demo.usercart.mapper.OrderMapper;
 import demo.usercart.model.Order;
 import demo.usercart.model.OrderItem;
 
-@Repository("orderDaoMybatis")
+@Repository("OrderDaoMybatis")
 public class OrderDaoImpl implements OrderDao{
 	
 	@Autowired

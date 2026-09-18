@@ -28,7 +28,7 @@ import net.sf.jasperreports.engine.JasperReport;
 public class ProductReportController {
 
     @Autowired
-    @Qualifier("productDaoMybatis")
+    @Qualifier("ProductDaoMybatis")
     private ProductDao productDao;
 
     @GetMapping("/report")

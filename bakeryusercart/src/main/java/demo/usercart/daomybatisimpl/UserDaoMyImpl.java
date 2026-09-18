@@ -7,7 +7,7 @@ import demo.usercart.dao.UserDao;
 import demo.usercart.mapper.UserMapper;
 import demo.usercart.model.User;
 
-@Repository("userDaoMybatis")
+@Repository("UserDaoMybatis")
 public class UserDaoMyImpl implements UserDao {
 	
 	@Autowired

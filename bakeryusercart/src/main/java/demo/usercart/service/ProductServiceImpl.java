@@ -32,7 +32,7 @@ import demo.usercart.repository.ProductRepository;
 public class ProductServiceImpl implements ProductService {
 
 	@Autowired
-	@Qualifier("productDaoMybatis")
+	@Qualifier("ProductDaoMybatis")
 	ProductDao productdao;
 
 	@Value("${app.product-image.import-directory}")

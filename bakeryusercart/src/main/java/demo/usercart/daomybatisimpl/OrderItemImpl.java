@@ -9,7 +9,7 @@ import demo.usercart.dao.OrderItemDao;
 import demo.usercart.mapper.OrderItemMapper;
 import demo.usercart.model.OrderItem;
 
-@Repository("orderItemDaoMybatis")
+@Repository("OrderItemDaoMybatis")
 public class OrderItemImpl implements OrderItemDao{
 	
 	@Autowired

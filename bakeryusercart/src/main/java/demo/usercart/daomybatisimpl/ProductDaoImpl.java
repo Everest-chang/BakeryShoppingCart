@@ -9,7 +9,7 @@ import demo.usercart.dao.ProductDao;
 import demo.usercart.mapper.ProductMapper;
 import demo.usercart.model.Product;
 
-@Repository("productDaoMybatis")
+@Repository("ProductDaoMybatis")
 public class ProductDaoImpl implements ProductDao {
 
 	@Autowired

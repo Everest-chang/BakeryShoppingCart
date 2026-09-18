@@ -9,7 +9,7 @@ import demo.usercart.dao.OrderDao;
 import demo.usercart.model.Order;
 import demo.usercart.repository.OrderRepository;
 
-@Repository("orderDaoJpa")
+@Repository("OrderDaoJpa")
 public class OrderDaoImpl implements OrderDao {
 	
 	@Autowired

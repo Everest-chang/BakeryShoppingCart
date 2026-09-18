@@ -30,7 +30,7 @@ public class RefreshTokenServiceImpl
 
     // 沿用目前會員功能使用的 MyBatis DAO
     @Autowired
-    @Qualifier("userDaoMybatis")
+    @Qualifier("UserDaoMybatis")
     private UserDao userDao;
 
     @Autowired

@@ -7,10 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import demo.usercart.dao.ProductDao;
 import demo.usercart.model.Product;
-import demo.usercart.repository.ItemRepository;
 import demo.usercart.repository.ProductRepository;
 
-@Repository("productDaoJpa")
+@Repository("ProductDaoJpa")
 public class ProductDaoImpl implements ProductDao {
 
 	@Autowired
